@@ -12,17 +12,17 @@ const header = {
         }
     },
 }
+
 const hero = {
   section: document.querySelector('.hero'),
   switchBtn: document.querySelector('.hero .switch .switch-input'),
 
   state: false,
-
-  // hold 관련
+  phase: 0,          // 0:init → 1:animated → 2:holding → 3:done
   lockScroll: false,
-  holdDone: false,
   holdTimer: null,
   lockY: 0,
+  st: null,
 
   init() {
     if (!this.section) return;
@@ -37,19 +37,34 @@ const hero = {
 
     this.createScrollTrigger();
 
-    // 스크롤 락 (휠 + 터치)
     this._lockHandler = (e) => {
       if (!this.lockScroll) return;
       e.preventDefault();
     };
 
+    this._countHandler = () => {
+      if (this.lockScroll) return;
+
+      if (this.phase === 0) {
+        this.enterState();
+        return;
+      }
+
+      if (this.phase === 1) {
+        this.enterHold();
+        return;
+      }
+    };
+
     window.addEventListener('wheel', this._lockHandler, { passive: false });
     window.addEventListener('touchmove', this._lockHandler, { passive: false });
+
+    window.addEventListener('wheel', this._countHandler, { passive: true });
+    window.addEventListener('touchmove', this._countHandler, { passive: true });
   },
 
   playIntro() {
-    if (!this.introTl) return;
-    this.introTl.play();
+    this.introTl?.play();
   },
 
   applyState() {
@@ -63,17 +78,11 @@ const hero = {
     const sw = this.section.querySelector('.text .switch');
     const img = this.section.querySelector('.img');
 
-    gsap.set([h2, p, sw, img], {
-      autoAlpha: 0,
-      y: 100,
-    });
+    gsap.set([h2, p, sw, img], { autoAlpha: 0, y: 100 });
 
     this.introTl = gsap.timeline({
       paused: true,
-      defaults: {
-        ease: 'power3.out',
-        duration: 0.8,
-      },
+      defaults: { ease: 'power3.out', duration: 0.8 },
     });
 
     this.introTl.to([h2, p, sw, img], {
@@ -89,51 +98,57 @@ const hero = {
     this.st = ScrollTrigger.create({
       trigger: this.section,
       start: `top-=${headerH} top`,
-      end: `+=600`,          // 🔥 % 제거 (핵심)
+      end: () => Math.max(this.section.offsetHeight, window.innerHeight),
       scrub: false,
       pin: false,
 
       onUpdate: (self) => {
-        const p = self.progress;
-
-        // 배경 상태 전환 (progress 사용 OK)
-        if (p > 0.15 && !this.state) {
-          this.state = true;
-          this.applyState();
-        }
-
-        if (p < 0.05 && this.state) {
-          this.state = false;
-          this.applyState();
-        }
-
-        // 🔒 홀드 진입
-        if (p >= 0.4 && !this.lockScroll && !this.holdDone) {
-          this.lockScroll = true;
-          this.lockY = window.scrollY;
-
-          // 즉시 위치 고정
-          window.scrollTo(0, this.lockY);
-
-          clearTimeout(this.holdTimer);
-          this.holdTimer = setTimeout(() => {
-            this.lockScroll = false;
-            this.holdDone = true;
-          }, 500);
-        }
-
-        // 🔒 락 중에는 무조건 되돌림
-        if (this.lockScroll) {
-          window.scrollTo(0, this.lockY);
-        }
-
-        // 다시 위로 올라가면 홀드 리셋
-        if (p < 0.3) {
-          this.holdDone = false;
+        if (self.progress < 0.05 && this.phase === 3) {
+          this.reset();
         }
       },
     });
-  }
+  },
+
+  enterState() {
+    if (this.phase !== 0) return;
+
+    this.phase = 1;
+    this.state = true;
+    this.applyState();
+  },
+
+  enterHold() {
+    if (this.phase !== 1) return;
+
+    this.phase = 2;
+    this.lockScroll = true;
+
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+    const heroTop =
+      this.section.getBoundingClientRect().top +
+      window.scrollY -
+      headerH;
+
+    this.lockY = heroTop;
+
+    window.scrollTo({ top: this.lockY, behavior: 'auto' });
+
+    this.st?.disable(false);
+
+    clearTimeout(this.holdTimer);
+    this.holdTimer = setTimeout(() => {
+      this.lockScroll = false;
+      this.phase = 3;
+      this.st?.enable(false);
+    }, 900);
+  },
+
+  reset() {
+    this.phase = 0;
+    this.state = false;
+    this.applyState();
+  },
 };
 
   
