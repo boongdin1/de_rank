@@ -16,147 +16,96 @@ const header = {
 const hero = {
   section: document.querySelector('.hero'),
   switchBtn: document.querySelector('.hero .switch .switch-input'),
-
   state: false,
-  phase: 0, // 0:init → 1:animated → 2:holding → 3:done
+  st: null,
   lockScroll: false,
   holdTimer: null,
-  st: null,
-
+  holdDone: false,
   init() {
-    if (!this.section) return;
-
-    this.createIntroTimeline();
-    this.playIntro();
-    this.createScrollTrigger();
-
-    this.switchBtn.addEventListener('change', () => {
-      this.state = this.switchBtn.checked;
-      this.applyState();
-    });
-
-    this._wheelHandler = (e) => {
-      if (!this.isHeroActive()) return;
-
-      const delta = e.deltaY || (e.touches?.[0]?.clientY ?? 0);
-
-      // 위로 스크롤은 허용 (리셋 감지는 ScrollTrigger가 담당)
-      if (delta < 0) return;
-
-      // 아래로 스크롤은 무조건 소비
-      e.preventDefault();
-
-      if (this.lockScroll) return;
-
-      if (this.phase === 0) {
-        this.enterState();
-        return;
-      }
-
-      if (this.phase === 1) {
-        this.enterHold();
-        return;
-      }
-
-      // phase 3 이후에는 스크롤 허용
-    };
-
-    window.addEventListener('wheel', this._wheelHandler, { passive: false });
-    window.addEventListener('touchmove', this._wheelHandler, { passive: false });
-  },
-
-  isHeroActive() {
-    const rect = this.section.getBoundingClientRect();
-    return rect.top <= 0 && rect.bottom > 0;
-  },
-
-  playIntro() {
-    this.introTl?.play();
-  },
-
+      if (!this.section) return;
+    
+      this.createIntroTimeline();
+      this.playIntro();
+    
+      this.switchBtn.addEventListener('change', () => {
+        this.state = this.switchBtn.checked;
+        this.applyState();
+      });
+    
+      this.createScrollTrigger();
+    
+      this._lockHandler = (e) => {
+        if (!this.lockScroll) return;
+        e.preventDefault();
+      };
+      window.addEventListener('wheel', this._lockHandler, { passive: false });
+      window.addEventListener('touchmove', this._lockHandler, { passive: false });
+    },
+    
+    playIntro() {
+      if (!this.introTl) return;
+      this.introTl.play();
+    },
   applyState() {
     this.section.classList.toggle('on', this.state);
     this.switchBtn.checked = this.state;
   },
-
   createIntroTimeline() {
-    const h2 = this.section.querySelector('.text h2');
-    const p = this.section.querySelector('.text p');
-    const sw = this.section.querySelector('.text .switch');
-    const img = this.section.querySelector('.img');
-
-    gsap.set([h2, p, sw, img], { autoAlpha: 0, y: 100 });
-
-    this.introTl = gsap.timeline({
-      paused: true,
-      defaults: { ease: 'power3.out', duration: 0.8 },
-    });
-
-    this.introTl.to([h2, p, sw, img], {
-      autoAlpha: 1,
-      y: 0,
-      stagger: 0.2,
-    });
-  },
-
-  createScrollTrigger() {
-    const headerH = document.querySelector('#header')?.offsetHeight || 0;
-
-    this.st = ScrollTrigger.create({
-      trigger: this.section,
-      start: `top-=${headerH} top`,
-      end: () => this.section.offsetHeight + window.innerHeight,
-      scrub: false,
-      pin: false,
-
-      onUpdate: (self) => {
-        // hero 상단까지 완전히 올라오면 리셋
-        if (self.progress <= 0 && this.phase === 3) {
-          this.reset();
+      const h2 = this.section.querySelector('.text h2');
+      const p = this.section.querySelector('.text p');
+      const sw = this.section.querySelector('.text .switch');
+      const img = this.section.querySelector('.img');
+      gsap.set([h2, p, sw, img], {
+        autoAlpha: 0,
+        y: 100,
+      });
+    
+      this.introTl = gsap.timeline({
+        paused: true,
+        defaults: {
+          ease: 'power3.ease',
+          duration: 0.8,
+        },
+      });
+    
+      this.introTl.to([h2, p, sw, img], {
+        autoAlpha: 1,
+        y: 0,
+        stagger: 0.2
+      });
+    },
+    createScrollTrigger() {
+      const headerH = document.querySelector('#header')?.offsetHeight || 0;
+      
+      const dummyTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: this.section,
+          start: `top-=${headerH} top`,
+          end: `+=120%`,
+          scrub: 1,
+          snap: {
+            snapTo: [0, 1],
+            duration: 0.5,
+            delay: 0,
+            ease: "power1.inOut"
+          },
+          onUpdate: (self) => {
+            const p = self.progress;
+            if (p > 0.5 && !this.state) {
+              this.state = true;
+              this.applyState();
+            } else if (p <= 0.5 && this.state) {
+              this.state = false;
+              this.applyState();
+            }
+          }
         }
-      },
-    });
-  },
-
-  enterState() {
-    if (this.phase !== 0) return;
-
-    this.phase = 1;
-    this.state = true;
-    this.applyState();
-  },
-
-  enterHold() {
-    if (this.phase !== 1) return;
-
-    this.phase = 2;
-    this.lockScroll = true;
-
-    const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    const heroTop =
-      this.section.getBoundingClientRect().top +
-      window.scrollY -
-      headerH;
-
-    window.scrollTo({ top: heroTop, behavior: 'auto' });
-
-    this.st?.disable(false);
-
-    clearTimeout(this.holdTimer);
-    this.holdTimer = setTimeout(() => {
-      this.lockScroll = false;
-      this.phase = 3;
-      this.st?.enable(false);
-    }, 900);
-  },
-
-  reset() {
-    this.phase = 0;
-    this.state = false;
-    this.applyState();
-  },
+      });
+    
+      dummyTl.to({}, { duration: 1 }); 
+    }
+    
 };
-
   
   const review = {
     step: 5,
@@ -463,7 +412,9 @@ const intro = {
           return `top-=${h} top`;
         },
         end: () =>
-          `+=400%`,
+          `+=${(window.innerHeight * (total - 1))}`,
+        pin: true,
+        pinSpacing: true,
         scrub: false,
         markers: false,
   
