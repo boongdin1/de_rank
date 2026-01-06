@@ -13,112 +13,129 @@ const header = {
     },
 }
 const hero = {
-    section: document.querySelector('.hero'),
-    switchBtn: document.querySelector('.hero .switch .switch-input'),
-    state: false,
-    st: null,
-    lockScroll: false,
-    holdTimer: null,
-    holdDone: false,
-    init() {
-        if (!this.section) return;
-      
-        this.createIntroTimeline();
-        this.playIntro();
-      
-        this.switchBtn.addEventListener('change', () => {
-          this.state = this.switchBtn.checked;
+  section: document.querySelector('.hero'),
+  switchBtn: document.querySelector('.hero .switch .switch-input'),
+
+  state: false,
+
+  // hold 관련
+  lockScroll: false,
+  holdDone: false,
+  holdTimer: null,
+  lockY: 0,
+
+  init() {
+    if (!this.section) return;
+
+    this.createIntroTimeline();
+    this.playIntro();
+
+    this.switchBtn.addEventListener('change', () => {
+      this.state = this.switchBtn.checked;
+      this.applyState();
+    });
+
+    this.createScrollTrigger();
+
+    // 스크롤 락 (휠 + 터치)
+    this._lockHandler = (e) => {
+      if (!this.lockScroll) return;
+      e.preventDefault();
+    };
+
+    window.addEventListener('wheel', this._lockHandler, { passive: false });
+    window.addEventListener('touchmove', this._lockHandler, { passive: false });
+  },
+
+  playIntro() {
+    if (!this.introTl) return;
+    this.introTl.play();
+  },
+
+  applyState() {
+    this.section.classList.toggle('on', this.state);
+    this.switchBtn.checked = this.state;
+  },
+
+  createIntroTimeline() {
+    const h2 = this.section.querySelector('.text h2');
+    const p = this.section.querySelector('.text p');
+    const sw = this.section.querySelector('.text .switch');
+    const img = this.section.querySelector('.img');
+
+    gsap.set([h2, p, sw, img], {
+      autoAlpha: 0,
+      y: 100,
+    });
+
+    this.introTl = gsap.timeline({
+      paused: true,
+      defaults: {
+        ease: 'power3.out',
+        duration: 0.8,
+      },
+    });
+
+    this.introTl.to([h2, p, sw, img], {
+      autoAlpha: 1,
+      y: 0,
+      stagger: 0.2,
+    });
+  },
+
+  createScrollTrigger() {
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+
+    this.st = ScrollTrigger.create({
+      trigger: this.section,
+      start: `top-=${headerH} top`,
+      end: `+=600`,          // 🔥 % 제거 (핵심)
+      scrub: false,
+      pin: false,
+
+      onUpdate: (self) => {
+        const p = self.progress;
+
+        // 배경 상태 전환 (progress 사용 OK)
+        if (p > 0.15 && !this.state) {
+          this.state = true;
           this.applyState();
-        });
-      
-        this.createScrollTrigger();
-      
-        this._lockHandler = (e) => {
-          if (!this.lockScroll) return;
-          e.preventDefault();
-        };
-        window.addEventListener('wheel', this._lockHandler, { passive: false });
-        window.addEventListener('touchmove', this._lockHandler, { passive: false });
+        }
+
+        if (p < 0.05 && this.state) {
+          this.state = false;
+          this.applyState();
+        }
+
+        // 🔒 홀드 진입
+        if (p >= 0.4 && !this.lockScroll && !this.holdDone) {
+          this.lockScroll = true;
+          this.lockY = window.scrollY;
+
+          // 즉시 위치 고정
+          window.scrollTo(0, this.lockY);
+
+          clearTimeout(this.holdTimer);
+          this.holdTimer = setTimeout(() => {
+            this.lockScroll = false;
+            this.holdDone = true;
+          }, 500);
+        }
+
+        // 🔒 락 중에는 무조건 되돌림
+        if (this.lockScroll) {
+          window.scrollTo(0, this.lockY);
+        }
+
+        // 다시 위로 올라가면 홀드 리셋
+        if (p < 0.3) {
+          this.holdDone = false;
+        }
       },
-      
-      playIntro() {
-        if (!this.introTl) return;
-        this.introTl.play();
-      },
-    applyState() {
-      this.section.classList.toggle('on', this.state);
-      this.switchBtn.checked = this.state;
-    },
-    createIntroTimeline() {
-        const h2 = this.section.querySelector('.text h2');
-        const p = this.section.querySelector('.text p');
-        const sw = this.section.querySelector('.text .switch');
-        const img = this.section.querySelector('.img');
-        gsap.set([h2, p, sw, img], {
-          autoAlpha: 0,
-          y: 100,
-        });
-      
-        this.introTl = gsap.timeline({
-          paused: true,
-          defaults: {
-            ease: 'power3.ease',
-            duration: 0.8,
-          },
-        });
-      
-        this.introTl.to([h2, p, sw, img], {
-          autoAlpha: 1,
-          y: 0,
-          stagger: 0.2
-        });
-      },
-    createScrollTrigger() {
-        const headerH = document.querySelector('#header')?.offsetHeight || 0;
-      
-        this.st = ScrollTrigger.create({
-          trigger: this.section,
-          start: `top-=${headerH} top`,
-          end: `+=130%`,
-          pin: false,
-          pinSpacing: false,
-          scrub: false,
-          markers: false,
-      
-          onUpdate: (self) => {
-            const p = self.progress;
-            console.log(p);
-      
-            if (p > 0.15 && !this.state) {
-              this.state = true;
-              this.applyState();
-            }
-      
-            if (p < 0.05 && this.state) {
-              this.state = false;
-              this.applyState();
-            }
-      
-            if (p > 0.4) {
-              if (!this.lockScroll && !this.holdDone) {
-                this.lockScroll = true;
-      
-                clearTimeout(this.holdTimer);
-                this.holdTimer = setTimeout(() => {
-                  this.lockScroll = false;
-                  this.holdDone = true;
-                }, 500); 
-              }
-            } else {
-              this.holdDone = false;
-              this.lockScroll = false;
-              clearTimeout(this.holdTimer);
-            }
-          },
-        });
-      }
-      
-  };
+    });
+  }
+};
+
   
   const review = {
     step: 5,
@@ -553,6 +570,9 @@ document.addEventListener('DOMContentLoaded', function() {
         duration: 800,
     });
     gsap.registerPlugin(ScrollTrigger);
+    ScrollTrigger.config({
+      ignoreMobileResize: true
+    });
 
     hero.init();
 
