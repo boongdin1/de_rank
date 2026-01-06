@@ -18,10 +18,12 @@ main .sec-title{
 .hero{
     padding:0;
     position: sticky;
-    top:61px;
+    top:0;
+    padding-top: 61px;
+    box-sizing: border-box;
     left: 0;
     width: 100%;
-    height: calc(100vh - 61px);
+    height: 100vh;
 }
 .hero .bg{
     position: absolute;
