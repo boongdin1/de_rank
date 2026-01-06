@@ -52,8 +52,7 @@ main .sec-title{
     display: flex;
     flex-direction: column;
     /* height: 100%; */
-    min-height:calc(100svh - 61px);
-    max-height:calc(100lvh - 61px);
+    min-height: calc(var(--vh) - 61px);
     padding:0;
     gap: 40px;
 }
