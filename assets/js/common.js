@@ -412,9 +412,9 @@ const intro = {
           return `top-=${h} top`;
         },
         end: () =>
-          `+=${(window.innerHeight * (total - 1))}`,
-        pin: true,
-        pinSpacing: true,
+          `+=400%`,
+        pin: false,
+        pinSpacing: false,
         scrub: false,
         markers: false,
   

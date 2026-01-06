@@ -289,6 +289,10 @@ main .sec-title{
     color:#fff;
     text-align: center;
 }
+.intro .text-wrap{
+    position: relative;
+    z-index: 4;
+}
 .intro .text-list{
     position: relative;
     z-index: 3;
