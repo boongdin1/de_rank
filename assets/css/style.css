@@ -22,6 +22,7 @@ main .sec-title{
     left: 0;
     width: 100%;
     min-height:calc(100svh - 61px);
+    height: 100vh;
     max-height:calc(100lvh - 61px);
 }
 .hero .bg{
