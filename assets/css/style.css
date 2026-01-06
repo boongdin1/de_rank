@@ -430,19 +430,17 @@ main .sec-title{
 }
 .faq-list .faq-item{
     position: relative;
-    padding:20px 0;
     border-bottom: 1px solid var(--devider-2);
-    font-size: 0;
 }
 .faq-list .faq-item .faq-title button{
-    max-width: calc(100% - 26px);
     text-align: left;
     background-color: transparent;
     border:0;
     cursor: pointer;
     box-sizing: border-box;
     word-break: keep-all;
-    display: inline-block;
+    padding:20px 26px 20px 0;
+    width: 100%;
 }
 .faq-list .faq-item .faq-title button::before{
     content:'';
@@ -471,10 +469,11 @@ main .sec-title{
     opacity: 0;
 }
 .faq-list .faq-item .faq-content{
-    padding-top: 12px;
+    padding: 0 0 20px;
     display: none;
     box-sizing: border-box;
     word-break: keep-all;
+    margin: -8px 0 0;
 }
 
 @media (min-width: 800px){
@@ -672,12 +671,16 @@ main .sec-title{
     .faq{
         background: var(--grey-1);
     }
-    .faq-list .faq-item{
-        padding:28px 0;
+    .faq-list .faq-item .faq-title button{
+        padding:28px 26px 28px 0;
     }
     .faq-list .faq-item .faq-title button::before,
     .faq-list .faq-item .faq-title button::after{
         top:calc(28px + 0.75em);
+    }
+    .faq-list .faq-item .faq-content{
+        padding:12px 0 28px;
+        margin-top: -16px;
     }
     .main-btm-banner{
         background: transparent url(../images/desktop_btm_banner.png) no-repeat center center;

@@ -212,6 +212,7 @@ const hero = {
   
       this.items.forEach((item, i) => {
         item.classList.toggle('visible', i < this.step);
+        item.style.transform = 'unset';
       });
       this.moreBtn.style.display = 'block';
     },
