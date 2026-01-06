@@ -18,10 +18,9 @@ const hero = {
   switchBtn: document.querySelector('.hero .switch .switch-input'),
 
   state: false,
-  phase: 0,          // 0:init → 1:animated → 2:holding → 3:done
+  phase: 0, // 0:init → 1:animated → 2:holding → 3:done
   lockScroll: false,
   holdTimer: null,
-  lockY: 0,
   st: null,
 
   init() {
@@ -29,20 +28,24 @@ const hero = {
 
     this.createIntroTimeline();
     this.playIntro();
+    this.createScrollTrigger();
 
     this.switchBtn.addEventListener('change', () => {
       this.state = this.switchBtn.checked;
       this.applyState();
     });
 
-    this.createScrollTrigger();
+    this._wheelHandler = (e) => {
+      if (!this.isHeroActive()) return;
 
-    this._lockHandler = (e) => {
-      if (!this.lockScroll) return;
+      const delta = e.deltaY || (e.touches?.[0]?.clientY ?? 0);
+
+      // 위로 스크롤은 허용 (리셋 감지는 ScrollTrigger가 담당)
+      if (delta < 0) return;
+
+      // 아래로 스크롤은 무조건 소비
       e.preventDefault();
-    };
 
-    this._countHandler = () => {
       if (this.lockScroll) return;
 
       if (this.phase === 0) {
@@ -54,13 +57,17 @@ const hero = {
         this.enterHold();
         return;
       }
+
+      // phase 3 이후에는 스크롤 허용
     };
 
-    window.addEventListener('wheel', this._lockHandler, { passive: false });
-    window.addEventListener('touchmove', this._lockHandler, { passive: false });
+    window.addEventListener('wheel', this._wheelHandler, { passive: false });
+    window.addEventListener('touchmove', this._wheelHandler, { passive: false });
+  },
 
-    window.addEventListener('wheel', this._countHandler, { passive: true });
-    window.addEventListener('touchmove', this._countHandler, { passive: true });
+  isHeroActive() {
+    const rect = this.section.getBoundingClientRect();
+    return rect.top <= 0 && rect.bottom > 0;
   },
 
   playIntro() {
@@ -98,12 +105,13 @@ const hero = {
     this.st = ScrollTrigger.create({
       trigger: this.section,
       start: `top-=${headerH} top`,
-      end: () => Math.max(this.section.offsetHeight, window.innerHeight),
+      end: () => this.section.offsetHeight + window.innerHeight,
       scrub: false,
       pin: false,
 
       onUpdate: (self) => {
-        if (self.progress < 0.05 && this.phase === 3) {
+        // hero 상단까지 완전히 올라오면 리셋
+        if (self.progress <= 0 && this.phase === 3) {
           this.reset();
         }
       },
@@ -130,9 +138,7 @@ const hero = {
       window.scrollY -
       headerH;
 
-    this.lockY = heroTop;
-
-    window.scrollTo({ top: this.lockY, behavior: 'auto' });
+    window.scrollTo({ top: heroTop, behavior: 'auto' });
 
     this.st?.disable(false);
 
@@ -457,9 +463,7 @@ const intro = {
           return `top-=${h} top`;
         },
         end: () =>
-          `+=${(window.innerHeight * (total - 1))}`,
-        pin: true,
-        pinSpacing: true,
+          `+=400%`,
         scrub: false,
         markers: false,
   

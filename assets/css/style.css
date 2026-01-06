@@ -5,6 +5,7 @@
 main section{
     padding:60px 0;
     box-sizing: border-box;
+    background-color: #fff;
 }
 main .sec-title{
     text-align: center;
@@ -23,6 +24,15 @@ main .sec-title{
     width: 100%;
     min-height: calc(var(--vh) - 61px);
 }
+
+.hero .bg-wrap{
+    position: absolute;
+    left:0;
+    top:0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
 .hero .bg{
     position: absolute;
     left:0;
@@ -31,8 +41,9 @@ main .sec-title{
     height: 100%;
     background: transparent url(../images/m_hero_bg_off.png) no-repeat center center / cover;
     transition: background-image 0.4s ease-in-out;
+    overflow: hidden;
 }
-.hero .bg::after{
+.hero .bg-wrap::after{
     content:'';
     position: absolute;
     left: 0;
@@ -192,6 +203,10 @@ main .sec-title{
 .hero.on .img .de-rank{
     transform: translate(0, 0);
 }
+.review{
+    position: relative;
+    z-index: 2;
+}
 .review .review-list{
     display: flex;
     flex-direction: column;
@@ -236,14 +251,21 @@ main .sec-title{
     border-radius: 43px;
     margin:13px auto 0;
 }
+.intro-wrap{
+    position: relative;
+    height: 500vh;
+}
 .intro{
-    max-height: calc(100vh - 61px);
-    height: calc(100vh - 61px);
+    position: sticky;
+    top:61px;
+    left: 0;
+    width: 100%;
+    max-height: calc(var(--vh) - 61px);
+    height: calc(var(--vh) - 61px);
     box-sizing: border-box;
     background:linear-gradient(180deg, #212123 80%, #2c2c4e 100%);
     display: flex;
     flex-direction: column;
-    position: relative;
     overflow: hidden;
     padding:0 !important
 }
