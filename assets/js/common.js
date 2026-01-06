@@ -79,14 +79,15 @@ const hero = {
         this.st = ScrollTrigger.create({
           trigger: this.section,
           start: `top-=${headerH} top`,
-          end: `+=${window.innerHeight}`,
-          pin: true,
-          pinSpacing: true,
+          end: `+=130%`,
+          pin: false,
+          pinSpacing: false,
           scrub: false,
           markers: false,
       
           onUpdate: (self) => {
             const p = self.progress;
+            console.log(p);
       
             if (p > 0.15 && !this.state) {
               this.state = true;
@@ -98,7 +99,7 @@ const hero = {
               this.applyState();
             }
       
-            if (p > 0.9) {
+            if (p > 0.4) {
               if (!this.lockScroll && !this.holdDone) {
                 this.lockScroll = true;
       
@@ -106,7 +107,7 @@ const hero = {
                 this.holdTimer = setTimeout(() => {
                   this.lockScroll = false;
                   this.holdDone = true;
-                }, 0); 
+                }, 500); 
               }
             } else {
               this.holdDone = false;
