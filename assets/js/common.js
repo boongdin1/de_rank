@@ -598,3 +598,11 @@ document.addEventListener('DOMContentLoaded', function() {
     header.init();
 });
 
+
+
+function setVH(){
+  const h = window.visualViewport?.height || window.innerHeight;
+  document.documentElement.style.setProperty('--vh', `${h}px`);
+}
+setVH();
+window.visualViewport?.addEventListener('resize', setVH);
