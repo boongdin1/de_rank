@@ -12,90 +12,166 @@ const header = {
       }
   },
 }
+
 const hero = {
   section: document.querySelector('.hero'),
   switchBtn: document.querySelector('.hero .switch .switch-input'),
+
   state: false,
-  st: null,
-  lockScroll: false,
-  holdTimer: null,
-  holdDone: false,
+  locked: false,
+  observer: null,
+  freezeY: 0,
+
   init() {
-      if (!this.section) return;
-    
-      this.createIntroTimeline();
-      this.playIntro();
-    
-      this.switchBtn.addEventListener('change', () => {
-        this.state = this.switchBtn.checked;
-        this.applyState();
-      });
-    
-      this.createScrollTrigger();
-    
-    },
-    
-    playIntro() {
-      if (!this.introTl) return;
-      this.introTl.play();
-    },
+    if (!this.section) return;
+
+    this.createIntroTimeline();
+    this.playIntro();
+
+    this.switchBtn.addEventListener('change', () => {
+      this.state = this.switchBtn.checked;
+      this.applyState();
+    });
+
+    this.createObserver();
+    this.createTrigger();
+  },
+
+  playIntro() {
+    this.introTl?.play();
+  },
+
   applyState() {
     this.section.classList.toggle('on', this.state);
     this.switchBtn.checked = this.state;
   },
+
+  freezeScroll() {
+    this.freezeY = window.scrollY;
+    this._restore = () => window.scrollTo(0, this.freezeY);
+    window.addEventListener('scroll', this._restore, { passive: false });
+  },
+
+  unfreezeScroll() {
+    window.removeEventListener('scroll', this._restore);
+  },
+
+  lock(duration = 700) {
+    this.locked = true;
+    gsap.delayedCall(duration / 1000, () => {
+      this.locked = false;
+    });
+  },
+
+  createObserver() {
+    this.observer = Observer.create({
+      type: 'wheel,touch',
+      tolerance: 10,
+      preventDefault: true,
+
+      onDown: () => {
+        if (this.locked) return;
+
+        if (!this.state) {
+          this.lock();
+          this.state = true;
+          this.applyState();
+          return;
+        }
+
+        this.goReview();
+      },
+
+      onUp: () => {
+        if (this.locked || !this.state) return;
+
+        this.lock();
+        this.state = false;
+        this.applyState();
+      }
+    });
+
+    this.observer.disable();
+  },
+
+  goReview() {
+    this.locked = true;
+
+    this.observer.disable();
+    this.unfreezeScroll();
+
+    const review = document.querySelector('.review');
+    if (!review) return;
+
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+    const top =
+      review.getBoundingClientRect().top +
+      window.scrollY -
+      headerH;
+
+    gsap.to(window, {
+      scrollTo: { y: top },
+      duration: 0.8,
+      ease: 'power2.out',
+      onComplete: () => {
+        this.locked = false;
+      }
+    });
+  },
+
+  createTrigger() {
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+
+    ScrollTrigger.create({
+      trigger: this.section,
+      start: `top-=${headerH} top`,
+      end: 'bottom top',
+
+      onEnter: () => {
+        this.state = false;
+        this.applyState();
+        this.freezeScroll();
+        this.observer.enable();
+      },
+
+      onEnterBack: () => {
+        this.state = true;
+        this.applyState();
+        this.freezeScroll();
+        this.observer.enable();
+      },
+
+      onLeave: () => {
+        this.observer.disable();
+        this.unfreezeScroll();
+      },
+
+      onLeaveBack: () => {
+        this.observer.disable();
+        this.unfreezeScroll();
+      }
+    });
+  },
+
   createIntroTimeline() {
-      const h2 = this.section.querySelector('.text h2');
-      const p = this.section.querySelector('.text p');
-      const sw = this.section.querySelector('.text .switch');
-      const img = this.section.querySelector('.img');
-      gsap.set([h2, p, sw, img], {
-        autoAlpha: 0,
-        y: 100,
-      });
-    
-      this.introTl = gsap.timeline({
-        paused: true,
-        defaults: {
-          ease: 'power3.ease',
-          duration: 0.8,
-        },
-      });
-    
-      this.introTl.to([h2, p, sw, img], {
-        autoAlpha: 1,
-        y: 0,
-        stagger: 0.2
-      });
-    },
-  createScrollTrigger() {
-      const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    
-      this.st = ScrollTrigger.create({
-        trigger: this.section,
-        start: `top-=${headerH} top`,
-        end: `+=${window.innerHeight}`,
-        pin: false,
-        pinSpacing: false,
-        scrub: true,
-        markers: false,
-    
-        onUpdate: (self) => {
-          const p = self.progress;
-    
-          if (p > 0.15 && !this.state) {
-            this.state = true;
-            this.applyState();
-          }
-    
-          if (p < 0.05 && this.state) {
-            this.state = false;
-            this.applyState();
-          }
-        
-        },
-      });
-    }
-    
+    const h2 = this.section.querySelector('.text h2');
+    const p = this.section.querySelector('.text p');
+    const sw = this.section.querySelector('.text .switch');
+    const img = this.section.querySelector('.img');
+
+    gsap.set([h2, p, sw, img], { autoAlpha: 0, y: 80 });
+
+    this.introTl = gsap.timeline({
+      paused: true,
+      defaults: { duration: 0.8, ease: 'power3.out' }
+    });
+
+    this.introTl.to([h2, p, sw, img], {
+      autoAlpha: 1,
+      y: 0,
+      stagger: 0.2
+    });
+  }
 };
 
 
@@ -450,14 +526,6 @@ const intro = {
         ,
     });
 
-    // window.addEventListener('resize', this.handleResize.bind(this));
-
-    // if (window.visualViewport) {
-    //   window.visualViewport.addEventListener(
-    //     'resize',
-    //     this.handleResize.bind(this)
-    //   );
-    // }
   },
 
   getOuterHeight(el) {
