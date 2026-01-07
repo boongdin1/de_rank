@@ -120,7 +120,7 @@ const hero = {
       review.getBoundingClientRect().top +
       window.scrollY;
 
-    this.observer.disable();
+    
 
     gsap.to(window, {
       scrollTo: { y: top },
@@ -128,6 +128,7 @@ const hero = {
       ease: 'power2.out',
       onComplete: () => {
         this.animating = false;
+        this.observer.disable();
       }
     });
   },
@@ -156,7 +157,6 @@ const hero = {
   
     const checkScrollTop = () => {
       if (window.scrollY === 0) {
-        console.log('scrollTop');
         this.step = 0;
         this.state = false;
         this.applyState();
