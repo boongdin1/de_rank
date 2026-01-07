@@ -20,12 +20,10 @@ const hero = {
   state: false,
   locked: false,
   observer: null,
-  freezeY: 0,
 
   init() {
     if (!this.section) return;
 
-   
     this.createIntroTimeline();
     this.playIntro();
 
@@ -36,17 +34,8 @@ const hero = {
 
     this.createObserver();
     this.createTrigger();
-    if(window.scrollY <= hero.section.offsetHeight) {
-      this.state = false;
-      this.applyState();
-      this.freezeScroll();
-      this.observer.enable();
-    }
-    
   },
-  isMobile() {
-    return ScrollTrigger.isTouch === 1;
-  },
+
   playIntro() {
     this.introTl?.play();
   },
@@ -56,21 +45,9 @@ const hero = {
     this.switchBtn.checked = this.state;
   },
 
-  freezeScroll() {
-    if (this.isMobile()) return;
-    this.freezeY = window.scrollY;
-    this._restore = () => window.scrollTo(0, this.freezeY);
-    window.addEventListener('scroll', this._restore, { passive: false });
-  },
-
-  unfreezeScroll() {
-    if (this.isMobile()) return;
-    window.removeEventListener('scroll', this._restore);
-  },
-
-  lock(duration = 700) {
+  lock(time = 700) {
     this.locked = true;
-    gsap.delayedCall(duration / 1000, () => {
+    gsap.delayedCall(time / 1000, () => {
       this.locked = false;
     });
   },
@@ -79,8 +56,8 @@ const hero = {
     this.observer = Observer.create({
       type: 'wheel,touch',
       tolerance: 10,
-      preventDefault: this.isMobile() ? false : true,
-      allowClicks: this.isMobile() ? true : false,
+      preventDefault: true,
+      allowClicks: true,
 
       onDown: () => {
         if (this.locked) return;
@@ -96,79 +73,74 @@ const hero = {
       },
 
       onUp: () => {
-        if (this.locked || !this.state) return;
+        if (this.locked) return;
 
-        this.lock();
-        this.state = false;
-        this.applyState();
+        if (this.state) {
+          this.lock();
+          this.state = false;
+          this.applyState();
+        }
       }
     });
 
     this.observer.disable();
   },
 
+  createTrigger() {
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+    const heroH = this.section.offsetHeight;
+
+    ScrollTrigger.create({
+      trigger: this.section,
+      start: `top-=${headerH} top`,
+      end: `+=${heroH}`,
+
+      onEnter: () => {
+        this.state = false;
+        this.applyState();
+        this.observer.enable();
+      },
+
+      onUpdate: (self) => {
+        if (self.direction === -1 && self.progress <= 0.01) {
+          this.state = false;
+          this.applyState();
+          this.observer.enable();
+        }
+      },
+
+      onLeave: () => {
+        this.observer.disable();
+      },
+
+      onLeaveBack: () => {
+        this.observer.disable();
+      }
+    });
+  },
+
   goReview() {
+    if (this.locked) return;
     this.locked = true;
 
     this.observer.disable();
-    this.unfreezeScroll();
 
     const review = document.querySelector('.review');
     if (!review) return;
 
     const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    const top =
+    const targetY =
       review.getBoundingClientRect().top +
       window.scrollY -
       headerH;
 
     gsap.to(window, {
-      scrollTo: { y: top },
+      scrollTo: { y: targetY },
       duration: 0.8,
       ease: 'power2.out',
       onComplete: () => {
         this.locked = false;
       }
-    });
-  },
-
-  createTrigger() {
-    const headerH = document.querySelector('#header')?.offsetHeight || 0;
-
-    ScrollTrigger.create({
-      trigger: this.section,
-      start: `top-=${headerH} top`,
-      end: 'bottom top',
-
-      onEnter: () => {
-      },
-      onUpdate(self){
-        // const p = self.progress;
-        // const d = self.direction;
-        // if(d === -1){
-        //   console.log(p);
-        //   if(p <= 0.5){
-        //     hero.state = false;
-        //     hero.applyState();  
-        //     // hero.freezeScroll();
-            
-        //   }else if(p >= 0.5){
-        //     hero.state = true;
-        //     hero.applyState();
-        //   }else if(p <= 0){
-        //     // hero.unfreezeScroll();     
-        //     // hero.observer.disable();   
-        //     hero.observer.enable();
-        //   }
-        // }
-
-      },
-      onLeave: () => {
-        console.log('onLeave');
-        this.observer.disable();
-        this.unfreezeScroll();
-      },
-
     });
   },
 
@@ -192,7 +164,6 @@ const hero = {
     });
   }
 };
-
 
 const review = {
   step: 5,
