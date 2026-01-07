@@ -459,6 +459,13 @@ const intro = {
     });
 
     window.addEventListener('resize', this.handleResize.bind(this));
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener(
+        'resize',
+        this.handleResize.bind(this)
+      );
+    }
   },
 
   getOuterHeight(el) {
