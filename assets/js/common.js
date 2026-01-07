@@ -556,7 +556,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 리뷰
   review.init();
-  // window.addEventListener('resize', review.handleResize.bind(review));
 
   //intro
   intro.init();
@@ -576,9 +575,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-// function setVH(){
-//   const h = window.visualViewport?.height || window.innerHeight;
-//   document.documentElement.style.setProperty('--vh', `${h}px`);
-// }
-// setVH();
-// window.visualViewport?.addEventListener('resize', setVH);
+function setVH(){
+  const h = window.visualViewport?.height || window.innerHeight;
+  document.documentElement.style.setProperty('--vh', `${h}px`);
+}
+setVH();
+window.visualViewport?.addEventListener('resize', setVH);
