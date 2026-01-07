@@ -33,12 +33,6 @@ const hero = {
     
       this.createScrollTrigger();
     
-      this._lockHandler = (e) => {
-        if (!this.lockScroll) return;
-        e.preventDefault();
-      };
-      // window.addEventListener('wheel', this._lockHandler, { passive: false });
-      // window.addEventListener('touchmove', this._lockHandler, { passive: false });
     },
     
     playIntro() {
@@ -97,22 +91,7 @@ const hero = {
             this.state = false;
             this.applyState();
           }
-    
-          if (p > 0.9) {
-            if (!this.lockScroll && !this.holdDone) {
-              this.lockScroll = true;
-    
-              clearTimeout(this.holdTimer);
-              this.holdTimer = setTimeout(() => {
-                this.lockScroll = false;
-                this.holdDone = true;
-              }, 0); 
-            }
-          } else {
-            this.holdDone = false;
-            this.lockScroll = false;
-            clearTimeout(this.holdTimer);
-          }
+        
         },
       });
     }
