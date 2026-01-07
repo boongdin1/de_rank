@@ -161,11 +161,16 @@ const review = {
 
   enableMarquee() {
     if (this.loop) return;
-
+  
     const boxes = gsap.utils.toArray(this.items);
-
-    boxes.forEach(item => item.classList.add('visible'));
-
+  
+    gsap.killTweensOf(boxes);
+    gsap.set(boxes, { clearProps: 'all' });
+  
+    boxes.forEach((item, index) => {
+      item.classList.add('visible', index < this.step);
+    });
+  
     this.loop = horizontalLoop(boxes, {
       repeat: -1,
       draggable: true,
@@ -174,31 +179,37 @@ const review = {
       center: false,
       snap: false,
     });
-
+  
     this.moreBtn.style.display = 'none';
   },
 
   destroyMarquee() {
     if (!this.loop) return;
-
+  
     this.loop.kill();
-
+  
     if (this.loop.draggable) {
       this.loop.draggable.kill();
     }
-
+  
     if (this.loop.cleanup) {
       this.loop.cleanup();
     }
-
+  
     this.loop = null;
-
+  
+    gsap.killTweensOf(this.items);
+  
+    gsap.set(this.items, {
+      clearProps: 'all' 
+    });
+  
     this.items.forEach((item, i) => {
       item.classList.toggle('visible', i < this.step);
-      item.style.transform = 'translateX(0)';
     });
+  
     this.moreBtn.style.display = 'block';
-  },
+  },  
 
   handleLayout() {
     if (window.innerWidth >= 800) {
