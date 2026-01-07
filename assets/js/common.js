@@ -704,10 +704,35 @@ document.addEventListener('DOMContentLoaded', function() {
   header.init();
 });
 
+(function () {
+  let fixedVH = null;
 
-function setVH(){
-  const h = window.visualViewport?.height || window.innerHeight;
-  document.documentElement.style.setProperty('--vh', `${h}px`);
-}
-setVH();
-window.visualViewport?.addEventListener('resize', setVH);
+  function setStableVH(force = false) {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const current = vv.height;
+
+    if (fixedVH === null || force) {
+      fixedVH = current;
+      document.documentElement.style.setProperty('--vh', `${fixedVH}px`);
+    }
+  }
+
+  setStableVH(true);
+
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => setStableVH(true), 300);
+  });
+
+  window.visualViewport?.addEventListener('resize', () => {
+    if (!fixedVH) return;
+
+    const h = window.visualViewport.height;
+
+    if (h > fixedVH + 20) {
+      fixedVH = h;
+      document.documentElement.style.setProperty('--vh', `${fixedVH}px`);
+    }
+  });
+})();
