@@ -23,6 +23,8 @@ main .sec-title{
     left: 0;
     width: 100%;
     min-height: calc(var(--vh) - 61px);
+    touch-action: none;
+
     /* height: calc(100vh - 61px); */
 }
 

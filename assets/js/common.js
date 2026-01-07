@@ -20,6 +20,7 @@ const hero = {
   state: false,
   locked: false,
   observer: null,
+  freezeY: 0,
 
   init() {
     if (!this.section) return;
@@ -27,13 +28,21 @@ const hero = {
     this.createIntroTimeline();
     this.playIntro();
 
-    this.switchBtn.addEventListener('change', () => {
+    this.switchBtn?.addEventListener('change', () => {
       this.state = this.switchBtn.checked;
       this.applyState();
     });
 
     this.createObserver();
     this.createTrigger();
+
+    // 초기 진입 시 최상단 체크
+    if (window.scrollY <= 10) {
+      this.state = false;
+      this.applyState();
+      this.freezeScroll();
+      this.observer.enable();
+    }
   },
 
   playIntro() {
@@ -42,105 +51,94 @@ const hero = {
 
   applyState() {
     this.section.classList.toggle('on', this.state);
-    this.switchBtn.checked = this.state;
+    if (this.switchBtn) this.switchBtn.checked = this.state;
   },
 
-  lock(time = 700) {
+  // 기존 방식 유지 (레이아웃 틀어짐 방지)
+  freezeScroll() {
+    this.freezeY = window.scrollY;
+    this._restore = () => window.scrollTo(0, this.freezeY);
+    window.addEventListener('scroll', this._restore, { passive: false });
+  },
+
+  unfreezeScroll() {
+    window.removeEventListener('scroll', this._restore);
+  },
+
+  lock(duration = 700) {
     this.locked = true;
-    gsap.delayedCall(time / 1000, () => {
+    gsap.delayedCall(duration / 1000, () => {
       this.locked = false;
     });
   },
 
   createObserver() {
     this.observer = Observer.create({
+      target: window, // 타겟을 window로 명확히 지정
       type: 'wheel,touch',
-      tolerance: 10,
+      tolerance: 40,  // 모바일 터치 감도 (기존보다 약간 높임)
       preventDefault: true,
-      allowClicks: true,
 
-      onDown: () => {
+      onUp: () => { // 손가락을 위로 쓸어올림 (Next)
         if (this.locked) return;
 
         if (!this.state) {
           this.lock();
           this.state = true;
           this.applyState();
-          return;
+        } else {
+          this.goReview();
         }
-
-        this.goReview();
       },
 
-      onUp: () => {
-        if (this.locked) return;
+      onDown: () => { // 손가락을 아래로 쓸어내림 (Prev)
+        if (this.locked || !this.state) return;
 
-        if (this.state) {
-          this.lock();
-          this.state = false;
-          this.applyState();
-        }
+        this.lock();
+        this.state = false;
+        this.applyState();
       }
     });
 
     this.observer.disable();
-  },
-
-  createTrigger() {
-    const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    const heroH = this.section.offsetHeight;
-
-    ScrollTrigger.create({
-      trigger: this.section,
-      start: `top-=${headerH} top`,
-      end: `+=${heroH}`,
-
-      onEnter: () => {
-        this.state = false;
-        this.applyState();
-        this.observer.enable();
-      },
-
-      onUpdate: (self) => {
-        if (self.direction === -1 && self.progress <= 0.01) {
-          this.state = false;
-          this.applyState();
-          this.observer.enable();
-        }
-      },
-
-      onLeave: () => {
-        this.observer.disable();
-      },
-
-      onLeaveBack: () => {
-        this.observer.disable();
-      }
-    });
   },
 
   goReview() {
-    if (this.locked) return;
     this.locked = true;
-
     this.observer.disable();
+    this.unfreezeScroll();
 
     const review = document.querySelector('.review');
     if (!review) return;
 
     const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    const targetY =
-      review.getBoundingClientRect().top +
-      window.scrollY -
-      headerH;
-
+    
     gsap.to(window, {
-      scrollTo: { y: targetY },
+      scrollTo: { y: review, offsetY: headerH },
       duration: 0.8,
       ease: 'power2.out',
       onComplete: () => {
         this.locked = false;
       }
+    });
+  },
+
+  createTrigger() {
+    ScrollTrigger.create({
+      trigger: this.section,
+      start: 'top top',
+      end: 'bottom top',
+      onEnterBack: () => {
+        // 위로 다시 올라오면 다시 잠금
+        this.state = true; // 혹은 false 상황에 맞춰 조절
+        this.applyState();
+        this.freezeScroll();
+        this.observer.enable();
+      },
+      onLeave: () => {
+        this.observer.disable();
+        this.unfreezeScroll();
+      },
     });
   },
 
@@ -150,7 +148,9 @@ const hero = {
     const sw = this.section.querySelector('.text .switch');
     const img = this.section.querySelector('.img');
 
-    gsap.set([h2, p, sw, img], { autoAlpha: 0, y: 80 });
+    if(!h2) return;
+
+    gsap.set([h2, p, sw, img], { autoAlpha: 0, y: 50 });
 
     this.introTl = gsap.timeline({
       paused: true,
@@ -160,10 +160,11 @@ const hero = {
     this.introTl.to([h2, p, sw, img], {
       autoAlpha: 1,
       y: 0,
-      stagger: 0.2
+      stagger: 0.15
     });
   }
 };
+
 
 const review = {
   step: 5,
