@@ -19,12 +19,11 @@ main .sec-title{
 .hero{
     padding:0;
     position: sticky;
-    top:0;
+    top:61px;
     left: 0;
     width: 100%;
     /* min-height: calc(var(--vh) - 61px); */
-    /* height: calc(100vh - 61px); */
-    height: 100lvh;
+    height: calc(100vh - 61px);
 }
 
 .hero .bg-wrap{
@@ -64,9 +63,8 @@ main .sec-title{
 .hero .inner{
     display: flex;
     flex-direction: column;
-    /* height: calc(100vh - 61px); */
+    height: calc(100vh - 61px);
     /* min-height: calc(var(--vh) - 61px); */
-    height: 100lvh;
     padding:0;
     gap: 40px;
 }
@@ -170,10 +168,11 @@ main .sec-title{
 
   
 .hero .img{
+    display: none;
     position: relative;
     margin:0 -20px;
     flex: 1 1 auto;
-    min-height: 0;
+    /* min-height: 0; */
     width: 90vw;
     overflow: hidden;
     box-shadow: 0 40px 60px 0 rgba(0, 0, 0, 0.25);
@@ -260,14 +259,12 @@ main .sec-title{
 }
 .intro{
     position: sticky;
-    /* top:61px; */
-    top:0;
+    top:61px;
     left: 0;
     width: 100%;
     /* max-height: calc(var(--vh) - 61px);
     height: calc(var(--vh) - 61px); */
-    /* height: calc(100vh - 61px); */
-    height: 100lvh;
+    height: calc(100vh - 61px);
     box-sizing: border-box;
     background:linear-gradient(180deg, #212123 80%, #2c2c4e 100%);
     display: flex;
