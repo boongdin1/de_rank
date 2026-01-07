@@ -23,7 +23,8 @@ main .sec-title{
     left: 0;
     width: 100%;
     /* min-height: calc(var(--vh) - 61px); */
-    height: calc(100vh - 61px);
+    /* height: calc(100vh - 61px); */
+    height: 100vh;
 }
 
 .hero .bg-wrap{
@@ -63,8 +64,9 @@ main .sec-title{
 .hero .inner{
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 61px);
+    /* height: calc(100vh - 61px); */
     /* min-height: calc(var(--vh) - 61px); */
+    height: 100vh;
     padding:0;
     gap: 40px;
 }
@@ -263,7 +265,8 @@ main .sec-title{
     width: 100%;
     /* max-height: calc(var(--vh) - 61px);
     height: calc(var(--vh) - 61px); */
-    height: calc(100vh - 61px);
+    /* height: calc(100vh - 61px); */
+    height: 100vh;
     box-sizing: border-box;
     background:linear-gradient(180deg, #212123 80%, #2c2c4e 100%);
     display: flex;
