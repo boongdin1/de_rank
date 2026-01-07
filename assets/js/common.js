@@ -21,7 +21,9 @@ const hero = {
   locked: false,
   observer: null,
   freezeY: 0,
-
+  isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  },
   init() {
     if (!this.section) return;
 
@@ -36,7 +38,6 @@ const hero = {
     this.createObserver();
     this.createTrigger();
 
-    // 초기 진입 시 최상단 체크
     if (window.scrollY <= 10) {
       this.state = false;
       this.applyState();
@@ -54,7 +55,6 @@ const hero = {
     if (this.switchBtn) this.switchBtn.checked = this.state;
   },
 
-  // 기존 방식 유지 (레이아웃 틀어짐 방지)
   freezeScroll() {
     this.freezeY = window.scrollY;
     this._restore = () => window.scrollTo(0, this.freezeY);
@@ -74,24 +74,24 @@ const hero = {
 
   createObserver() {
     this.observer = Observer.create({
-      target: window, // 타겟을 window로 명확히 지정
+      target: window, 
       type: 'wheel,touch',
-      tolerance: 40,  // 모바일 터치 감도 (기존보다 약간 높임)
+      wheelSpeed: this.isMobile() ? 1 : -1,
+      tolerance: 40,  
       preventDefault: true,
 
-      onUp: () => { // 손가락을 위로 쓸어올림 (Next)
+      onUp: () => { 
         if (this.locked) return;
-
-        if (!this.state) {
-          this.lock();
-          this.state = true;
-          this.applyState();
-        } else {
-          this.goReview();
-        }
+          if (!this.state) {  
+            this.lock();
+            this.state = true;
+            this.applyState();
+          } else {
+            this.goReview();
+          }
       },
 
-      onDown: () => { // 손가락을 아래로 쓸어내림 (Prev)
+      onDown: () => { 
         if (this.locked || !this.state) return;
 
         this.lock();
