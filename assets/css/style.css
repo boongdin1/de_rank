@@ -19,7 +19,7 @@ main .sec-title{
 .hero{
     padding:0;
     position: sticky;
-    top:61px;
+    top:0;
     left: 0;
     width: 100%;
     /* min-height: calc(var(--vh) - 61px); */
@@ -260,7 +260,8 @@ main .sec-title{
 }
 .intro{
     position: sticky;
-    top:61px;
+    /* top:61px; */
+    top:0;
     left: 0;
     width: 100%;
     /* max-height: calc(var(--vh) - 61px);
