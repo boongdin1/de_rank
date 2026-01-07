@@ -12,112 +12,159 @@ const header = {
       }
   },
 }
+
+
 const hero = {
   section: document.querySelector('.hero'),
   switchBtn: document.querySelector('.hero .switch .switch-input'),
-  state: false,
-  st: null,
-  lockScroll: false,
-  holdTimer: null,
-  holdDone: false,
+
+  step: 0,
+  maxStep: 1,
+  animating: false,
+  observer: null,
+
   init() {
-      if (!this.section) return;
-    
-      this.createIntroTimeline();
-      this.playIntro();
-    
-      this.switchBtn.addEventListener('change', () => {
-        this.state = this.switchBtn.checked;
-        this.applyState();
-      });
-    
-      this.createScrollTrigger();
-    
-      this._lockHandler = (e) => {
-        if (!this.lockScroll) return;
-        e.preventDefault();
-      };
-      window.addEventListener('wheel', this._lockHandler, { passive: false });
-      window.addEventListener('touchmove', this._lockHandler, { passive: false });
-    },
-    
-    playIntro() {
-      if (!this.introTl) return;
-      this.introTl.play();
-    },
-  applyState() {
-    this.section.classList.toggle('on', this.state);
-    this.switchBtn.checked = this.state;
+    if (!this.section) return;
+
+    this.createIntroTimeline();
+    this.playIntro();
+    this.createObserver();
+    this.observeReset();
   },
-  createIntroTimeline() {
-      const h2 = this.section.querySelector('.text h2');
-      const p = this.section.querySelector('.text p');
-      const sw = this.section.querySelector('.text .switch');
-      const img = this.section.querySelector('.img');
-      gsap.set([h2, p, sw, img], {
-        autoAlpha: 0,
-        y: 100,
-      });
-    
-      this.introTl = gsap.timeline({
-        paused: true,
-        defaults: {
-          ease: 'power3.ease',
-          duration: 0.8,
-        },
-      });
-    
-      this.introTl.to([h2, p, sw, img], {
-        autoAlpha: 1,
-        y: 0,
-        stagger: 0.2
-      });
-    },
-  createScrollTrigger() {
-      const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    
-      this.st = ScrollTrigger.create({
-        trigger: this.section,
-        start: `top-=${headerH} top`,
-        end: `+=100%`,
-        pin: false,
-        pinSpacing: false,
-        scrub: false,
-        markers: false,
-    
-        onUpdate: (self) => {
-          const p = self.progress;
-    
-          if (p > 0.15 && !this.state) {
-            this.state = true;
-            this.applyState();
-          }
-    
-          if (p < 0.05 && this.state) {
-            this.state = false;
-            this.applyState();
-          }
-    
-          if (p > 0.9) {
-            if (!this.lockScroll && !this.holdDone) {
-              this.lockScroll = true;
-    
-              clearTimeout(this.holdTimer);
-              this.holdTimer = setTimeout(() => {
-                this.lockScroll = false;
-                this.holdDone = true;
-              }, 0); 
-            }
-          } else {
-            this.holdDone = false;
-            this.lockScroll = false;
-            clearTimeout(this.holdTimer);
-          }
-        },
-      });
+
+  createObserver() {
+    this.observer = Observer.create({
+      type: 'wheel,touch,pointer',
+      tolerance: 10,
+      preventDefault: true,
+
+      onUp: () => {
+        if (this.animating || !this.isHeroActive()) return;
+        this.nextStep();
+      },
+
+      onDown: () => {
+        if (this.animating || !this.isHeroActive()) return;
+        this.prevStep();
+      },
+    });
+  },
+
+  isHeroActive() {
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+    const r = this.section.getBoundingClientRect();
+    return r.top <= headerH && r.bottom > headerH;
+  },
+
+  nextStep() {
+    if (this.step < this.maxStep) {
+      this.gotoStep(this.step + 1);
+    } else {
+      this.leaveHero();
     }
-    
+  },
+
+  prevStep() {
+    if (this.step > 0) {
+      this.gotoStep(this.step - 1);
+    }
+  },
+
+  gotoStep(target) {
+    this.animating = true;
+    this.step = target;
+
+    this.applyStep();
+
+    this.snapToHero(() => {
+      this.animating = false;
+    });
+  },
+
+  leaveHero() {
+    const next = document.querySelector('.review');
+    if (!next) return;
+
+    this.animating = true;
+
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+    const top =
+      next.getBoundingClientRect().top +
+      window.scrollY -
+      headerH;
+
+    gsap.to(window, {
+      scrollTo: { y: top },
+      duration: 0.6,
+      ease: 'power2.out',
+      onComplete: () => {
+        this.animating = false;
+      },
+    });
+  },
+
+  applyStep() {
+    const on = this.step === 1;
+    this.section.classList.toggle('on', on);
+    this.switchBtn.checked = on;
+  },
+
+  snapToHero(cb) {
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+    const top =
+      this.section.getBoundingClientRect().top +
+      window.scrollY -
+      headerH;
+
+    gsap.to(window, {
+      scrollTo: { y: top },
+      duration: 0.35,
+      ease: 'power2.out',
+      onComplete: cb,
+    });
+  },
+
+  observeReset() {
+    const headerH = document.querySelector('#header')?.offsetHeight || 0;
+
+    ScrollTrigger.create({
+      trigger: this.section,
+      start: `top-=${headerH} top`,
+      end: 'bottom top',
+      onLeaveBack: () => this.reset(),
+    });
+  },
+
+  reset() {
+    this.step = 0;
+    this.applyStep();
+  },
+
+  createIntroTimeline() {
+    const els = [
+      this.section.querySelector('.text h2'),
+      this.section.querySelector('.text p'),
+      this.section.querySelector('.text .switch'),
+      this.section.querySelector('.img'),
+    ];
+
+    gsap.set(els, { autoAlpha: 0, y: 100 });
+
+    this.introTl = gsap.timeline({ paused: true });
+    this.introTl.to(els, {
+      autoAlpha: 1,
+      y: 0,
+      duration: 0.6,
+      stagger: 0.15,
+      ease: 'power3.out',
+    });
+  },
+
+  playIntro() {
+    this.introTl?.play();
+  },
 };
+
 
 const review = {
   step: 5,
@@ -559,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
   AOS.init({
       duration: 800,
   });
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(Observer, ScrollToPlugin);
 
   hero.init();
 
