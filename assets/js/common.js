@@ -25,6 +25,7 @@ const hero = {
   init() {
     if (!this.section) return;
 
+   
     this.createIntroTimeline();
     this.playIntro();
 
@@ -35,6 +36,13 @@ const hero = {
 
     this.createObserver();
     this.createTrigger();
+    if(window.scrollY <= hero.section.offsetHeight) {
+      this.state = false;
+      this.applyState();
+      this.freezeScroll();
+      this.observer.enable();
+    }
+    
   },
 
   playIntro() {
@@ -69,7 +77,7 @@ const hero = {
       tolerance: 10,
       preventDefault: true,
 
-      onUp: () => {
+      onDown: () => {
         if (this.locked) return;
 
         if (!this.state) {
@@ -82,7 +90,7 @@ const hero = {
         this.goReview();
       },
 
-      onDown: () => {
+      onUp: () => {
         if (this.locked || !this.state) return;
 
         this.lock();
@@ -128,28 +136,34 @@ const hero = {
       end: 'bottom top',
 
       onEnter: () => {
-        this.state = false;
-        this.applyState();
-        this.freezeScroll();
-        this.observer.enable();
       },
+      onUpdate(self){
+        // const p = self.progress;
+        // const d = self.direction;
+        // if(d === -1){
+        //   console.log(p);
+        //   if(p <= 0.5){
+        //     hero.state = false;
+        //     hero.applyState();  
+        //     // hero.freezeScroll();
+            
+        //   }else if(p >= 0.5){
+        //     hero.state = true;
+        //     hero.applyState();
+        //   }else if(p <= 0){
+        //     // hero.unfreezeScroll();     
+        //     // hero.observer.disable();   
+        //     hero.observer.enable();
+        //   }
+        // }
 
-      onEnterBack: () => {
-        this.state = true;
-        this.applyState();
-        this.freezeScroll();
-        this.observer.enable();
       },
-
       onLeave: () => {
+        console.log('onLeave');
         this.observer.disable();
         this.unfreezeScroll();
       },
 
-      onLeaveBack: () => {
-        this.observer.disable();
-        this.unfreezeScroll();
-      }
     });
   },
 
