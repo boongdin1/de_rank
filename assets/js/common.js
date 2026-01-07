@@ -104,42 +104,42 @@ const hero = {
   },
 
   goReview() {
+    if (this.locked) return;
     this.locked = true;
+  
     if (this.observer) this.observer.disable();
-
+  
     const review = document.querySelector('.review');
     if (!review) {
       this.locked = false;
+      this.unfreezeScroll();
       return;
     }
-
+  
     const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    
+  
     gsap.to(window, {
-      scrollTo: { 
-        y: review, 
+      scrollTo: {
+        y: review,
         offsetY: headerH,
-        autoKill: false 
+        autoKill: false
       },
       duration: 0.8,
       ease: 'power2.out',
-      onStart: () => {
-      },
+      overwrite: true,
       onComplete: () => {
-        this.unfreezeScroll(); 
+        this.unfreezeScroll();
         this.locked = false;
       }
     });
   },
-
   createTrigger() {
     ScrollTrigger.create({
       trigger: this.section,
       start: 'top top',
       end: 'bottom top',
       onEnterBack: () => {
-        // 위로 다시 올라오면 다시 잠금
-        this.state = true; // 혹은 false 상황에 맞춰 조절
+        this.state = true; 
         this.applyState();
         this.freezeScroll();
         this.observer.enable();
