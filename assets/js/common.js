@@ -37,8 +37,8 @@ const hero = {
         if (!this.lockScroll) return;
         e.preventDefault();
       };
-      window.addEventListener('wheel', this._lockHandler, { passive: false });
-      window.addEventListener('touchmove', this._lockHandler, { passive: false });
+      // window.addEventListener('wheel', this._lockHandler, { passive: false });
+      // window.addEventListener('touchmove', this._lockHandler, { passive: false });
     },
     
     playIntro() {
@@ -597,9 +597,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-function setVH(){
-  const h = window.visualViewport?.height || window.innerHeight;
-  document.documentElement.style.setProperty('--vh', `${h}px`);
-}
-setVH();
-window.visualViewport?.addEventListener('resize', setVH);
+// function setVH(){
+//   const h = window.visualViewport?.height || window.innerHeight;
+//   document.documentElement.style.setProperty('--vh', `${h}px`);
+// }
+// setVH();
+// window.visualViewport?.addEventListener('resize', setVH);
