@@ -450,14 +450,14 @@ const intro = {
         ,
     });
 
-    window.addEventListener('resize', this.handleResize.bind(this));
+    // window.addEventListener('resize', this.handleResize.bind(this));
 
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener(
-        'resize',
-        this.handleResize.bind(this)
-      );
-    }
+    // if (window.visualViewport) {
+    //   window.visualViewport.addEventListener(
+    //     'resize',
+    //     this.handleResize.bind(this)
+    //   );
+    // }
   },
 
   getOuterHeight(el) {
@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 리뷰
   review.init();
-  window.addEventListener('resize', review.handleResize.bind(review));
+  // window.addEventListener('resize', review.handleResize.bind(review));
 
   //intro
   intro.init();
