@@ -44,7 +44,9 @@ const hero = {
     }
     
   },
-
+  isMobile() {
+    return ScrollTrigger.isTouch === 1;
+  },
   playIntro() {
     this.introTl?.play();
   },
@@ -55,12 +57,14 @@ const hero = {
   },
 
   freezeScroll() {
+    if (this.isMobile()) return;
     this.freezeY = window.scrollY;
     this._restore = () => window.scrollTo(0, this.freezeY);
     window.addEventListener('scroll', this._restore, { passive: false });
   },
 
   unfreezeScroll() {
+    if (this.isMobile()) return;
     window.removeEventListener('scroll', this._restore);
   },
 
@@ -75,7 +79,8 @@ const hero = {
     this.observer = Observer.create({
       type: 'wheel,touch',
       tolerance: 10,
-      preventDefault: true,
+      preventDefault: this.isMobile() ? false : true,
+      allowClicks: this.isMobile() ? true : false,
 
       onDown: () => {
         if (this.locked) return;
