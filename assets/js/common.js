@@ -194,6 +194,7 @@ const review = {
 
     this.items.forEach((item, i) => {
       item.classList.toggle('visible', i < this.step);
+      item.style.transform = 'translateX(0)';
     });
     this.moreBtn.style.display = 'block';
   },
