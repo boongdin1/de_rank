@@ -105,19 +105,28 @@ const hero = {
 
   goReview() {
     this.locked = true;
-    this.observer.disable();
-    this.unfreezeScroll();
+    if (this.observer) this.observer.disable();
 
     const review = document.querySelector('.review');
-    if (!review) return;
+    if (!review) {
+      this.locked = false;
+      return;
+    }
 
     const headerH = document.querySelector('#header')?.offsetHeight || 0;
     
     gsap.to(window, {
-      scrollTo: { y: review, offsetY: headerH },
+      scrollTo: { 
+        y: review, 
+        offsetY: headerH,
+        autoKill: false 
+      },
       duration: 0.8,
       ease: 'power2.out',
+      onStart: () => {
+      },
       onComplete: () => {
+        this.unfreezeScroll(); 
         this.locked = false;
       }
     });
