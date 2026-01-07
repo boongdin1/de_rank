@@ -78,7 +78,6 @@ const hero = {
 
   prevStep() {
     if (this.animating) return;
-    console.log('prevStep');
     
     if (this.step === 1) {
       this.animating = true;
@@ -156,11 +155,15 @@ const hero = {
     if (!wrap) return;
   
     const checkScrollTop = () => {
-      if (window.scrollY === 0) {
-        this.step = 0;
-        this.state = false;
-        this.applyState();
-        this.observer.enable();
+      if (this.step !== 2) {
+        const currentScroll = window.scrollY;
+        
+        if (currentScroll <= window.innerHeight) {
+          this.step = 0;
+          this.state = false;
+          this.applyState();
+          this.observer.enable();
+        }
       }
     };
 
@@ -703,37 +706,11 @@ document.addEventListener('DOMContentLoaded', function() {
   //header
   header.init();
 });
-(function () {
-  let fixedVH = 0;
-  let locked = false;
 
-  function applyVH(h) {
-    fixedVH = h;
-    document.documentElement.style.setProperty('--vh', `${fixedVH}px`);
-  }
 
-  function initVH() {
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    applyVH(vv.height);
-  }
-
-  initVH();
-
-  window.visualViewport?.addEventListener('resize', () => {
-    if (locked) return;
-
-    const h = window.visualViewport.height;
-
-    if (h > fixedVH + 20) {
-      applyVH(h);
-      locked = true; // 🔒 여기서 끝
-    }
-  });
-
-  window.addEventListener('orientationchange', () => {
-    locked = false;
-    setTimeout(initVH, 300);
-  });
-})();
+function setVH(){
+  const h = window.visualViewport?.height || window.innerHeight;
+  document.documentElement.style.setProperty('--vh', `${h}px`);
+}
+setVH();
+window.visualViewport?.addEventListener('resize', setVH);
