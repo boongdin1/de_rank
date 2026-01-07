@@ -69,7 +69,7 @@ const hero = {
       tolerance: 10,
       preventDefault: true,
 
-      onDown: () => {
+      onUp: () => {
         if (this.locked) return;
 
         if (!this.state) {
@@ -82,7 +82,7 @@ const hero = {
         this.goReview();
       },
 
-      onUp: () => {
+      onDown: () => {
         if (this.locked || !this.state) return;
 
         this.lock();
