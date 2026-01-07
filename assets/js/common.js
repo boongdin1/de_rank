@@ -76,7 +76,7 @@ const hero = {
         end: `+=${window.innerHeight}`,
         pin: false,
         pinSpacing: false,
-        scrub: false,
+        scrub: true,
         markers: false,
     
         onUpdate: (self) => {
@@ -418,7 +418,7 @@ const intro = {
         `+=400%`,
       pin: false,
       pinSpacing: false,
-      scrub: false,
+      scrub: true,
       markers: false,
 
       onUpdate: (self) => {
