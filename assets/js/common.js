@@ -703,36 +703,37 @@ document.addEventListener('DOMContentLoaded', function() {
   //header
   header.init();
 });
-
 (function () {
-  let fixedVH = null;
+  let fixedVH = 0;
+  let locked = false;
 
-  function setStableVH(force = false) {
+  function applyVH(h) {
+    fixedVH = h;
+    document.documentElement.style.setProperty('--vh', `${fixedVH}px`);
+  }
+
+  function initVH() {
     const vv = window.visualViewport;
     if (!vv) return;
 
-    const current = vv.height;
-
-    if (fixedVH === null || force) {
-      fixedVH = current;
-      document.documentElement.style.setProperty('--vh', `${fixedVH}px`);
-    }
+    applyVH(vv.height);
   }
 
-  setStableVH(true);
-
-  window.addEventListener('orientationchange', () => {
-    setTimeout(() => setStableVH(true), 300);
-  });
+  initVH();
 
   window.visualViewport?.addEventListener('resize', () => {
-    if (!fixedVH) return;
+    if (locked) return;
 
     const h = window.visualViewport.height;
 
     if (h > fixedVH + 20) {
-      fixedVH = h;
-      document.documentElement.style.setProperty('--vh', `${fixedVH}px`);
+      applyVH(h);
+      locked = true; // 🔒 여기서 끝
     }
+  });
+
+  window.addEventListener('orientationchange', () => {
+    locked = false;
+    setTimeout(initVH, 300);
   });
 })();
