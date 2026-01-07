@@ -15,230 +15,108 @@ const header = {
 const hero = {
   section: document.querySelector('.hero'),
   switchBtn: document.querySelector('.hero .switch .switch-input'),
-
   state: false,
-  animating: false,
-
-  step: 0,      
-  maxStep: 2,
-
-  back: false,
-  observer: null,
-  reviewScrollTrigger: null,
-
+  st: null,
+  lockScroll: false,
+  holdTimer: null,
+  holdDone: false,
   init() {
-    if (!this.section) return;
-
-    this.createIntroTimeline();
-    this.playIntro();
-  
-    this.switchBtn.addEventListener('change', () => {
-      this.state = this.switchBtn.checked;
-      this.applyState();
-    });
-  
-    this.observer = Observer.create({
-      type: "wheel,touch,pointer",
-      wheelSpeed: -1,
-      tolerance: 10,
-      preventDefault: true,
-      onDown: () => this.prevStep(),
-      onUp: () => this.nextStep(),
-    });
-  
-    this.bindReviewReturn();
-    this.bindReviewScroll();
-  },
-
-  playIntro() {
-    this.introTl?.play();
-  },
-
+      if (!this.section) return;
+    
+      this.createIntroTimeline();
+      this.playIntro();
+    
+      this.switchBtn.addEventListener('change', () => {
+        this.state = this.switchBtn.checked;
+        this.applyState();
+      });
+    
+      this.createScrollTrigger();
+    
+      this._lockHandler = (e) => {
+        if (!this.lockScroll) return;
+        e.preventDefault();
+      };
+      window.addEventListener('wheel', this._lockHandler, { passive: false });
+      window.addEventListener('touchmove', this._lockHandler, { passive: false });
+    },
+    
+    playIntro() {
+      if (!this.introTl) return;
+      this.introTl.play();
+    },
   applyState() {
     this.section.classList.toggle('on', this.state);
     this.switchBtn.checked = this.state;
   },
-
-
-  nextStep() {
-    if (this.animating) return;
-    if (this.step === 0) {
-      this.animating = true;
-      this.step = 1;
-      this.state = true;
-      this.applyState();
-      
-      gsap.delayedCall(0.6, () => {
-        this.animating = false;
-      });
-    } else if (this.step === 1) {
-      this.goReview();
-    }
-  },
-
-  prevStep() {
-    if (this.animating) return;
-    
-    if (this.step === 1) {
-      this.animating = true;
-      this.step = 0;
-      this.state = false;
-      this.applyState();
-      
-      gsap.delayedCall(0.6, () => {
-        this.animating = false;
-      });
-    }
-  },
-
-  goStep(target) {
-    this.animating = true;
-    this.step = target;
-
-    this.state = target === 1;
-    if(target === 1){
-      this.observer.enable();
-    } else {
-      this.observer.disable();
-    }
-    this.applyState();
-
-    gsap.delayedCall(0.6, () => {
-      this.animating = false;
-    });
-  },
-
-  goReview() {
-    this.animating = true;
-    this.step = 2;
-
-    const review = document.querySelector('.review');
-    if (!review) return;
-
-    const top =
-      review.getBoundingClientRect().top +
-      window.scrollY;
-
-    
-
-    gsap.to(window, {
-      scrollTo: { y: top },
-      duration: 0.8,
-      ease: 'power2.out',
-      onComplete: () => {
-        this.animating = false;
-        this.observer.disable();
-      }
-    });
-  },
   createIntroTimeline() {
-    const h2 = this.section.querySelector('.text h2');
-    const p = this.section.querySelector('.text p');
-    const sw = this.section.querySelector('.text .switch');
-    const img = this.section.querySelector('.img');
-
-    gsap.set([h2, p, sw, img], { autoAlpha: 0, y: 100 });
-
-    this.introTl = gsap.timeline({
-      paused: true,
-      defaults: { ease: 'power3.out', duration: 0.8 },
-    });
-
-    this.introTl.to([h2, p, sw, img], {
-      autoAlpha: 1,
-      y: 0,
-      stagger: 0.2
-    });
-  },
-  bindReviewReturn() {
-    const wrap = document.querySelector('.hero-wrap');
-    if (!wrap) return;
-  
-    const checkScrollTop = () => {
-      if (this.step !== 2) {
-        const currentScroll = window.scrollY;
-        
-        if (currentScroll <= window.innerHeight) {
-          this.step = 0;
-          this.state = false;
-          this.applyState();
-          this.observer.enable();
-        }
-      }
-    };
-
-    let scrollTimeout;
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        checkScrollTop();
-      }, 10);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-  
-    ScrollTrigger.create({
-      trigger: wrap,
-      start: 'top top',
-      end: 'bottom top',
-  
-      onEnterBack: () => {
-        console.log('enterBack');
-        hero.animating = true;
-        hero.step = 1;
-        hero.state = true;
-        hero.applyState();
-        
-        gsap.delayedCall(0.6, () => {
-          hero.animating = false;
-        });
-        checkScrollTop();
-      },
-      onLeave: () => {
-        console.log('leave');
-        this.observer.disable();
-      },
-      onEnter: () => {
-        console.log('enter');
-        checkScrollTop();
-      }
-    });
-  },
-  bindReviewScroll() {
-    const reviewSection = document.querySelector('.review');
-    if (!reviewSection) return;
-
-    let lastScrollY = window.scrollY;
-    let isScrollingUp = false;
-
-    const getReviewTop = () => {
+      const h2 = this.section.querySelector('.text h2');
+      const p = this.section.querySelector('.text p');
+      const sw = this.section.querySelector('.text .switch');
+      const img = this.section.querySelector('.img');
+      gsap.set([h2, p, sw, img], {
+        autoAlpha: 0,
+        y: 100,
+      });
+    
+      this.introTl = gsap.timeline({
+        paused: true,
+        defaults: {
+          ease: 'power3.ease',
+          duration: 0.8,
+        },
+      });
+    
+      this.introTl.to([h2, p, sw, img], {
+        autoAlpha: 1,
+        y: 0,
+        stagger: 0.2
+      });
+    },
+  createScrollTrigger() {
       const headerH = document.querySelector('#header')?.offsetHeight || 0;
-      return reviewSection.getBoundingClientRect().top + window.scrollY - headerH;
-    };
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const reviewTop = getReviewTop();
-      
-      if (currentScrollY >= reviewTop) {
-        isScrollingUp = currentScrollY < lastScrollY;
-        
-        if (isScrollingUp && this.step === 2 && !this.animating) {
-          this.animating = true;
-          this.step = 1;
-          this.state = false;
-          this.applyState();
-          
-          gsap.delayedCall(0.6, () => {
-            this.animating = false;
-          });
-        }
-      }
-      
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-  }
+    
+      this.st = ScrollTrigger.create({
+        trigger: this.section,
+        start: `top-=${headerH} top`,
+        end: `+=${window.innerHeight}`,
+        pin: false,
+        pinSpacing: false,
+        scrub: false,
+        markers: false,
+    
+        onUpdate: (self) => {
+          const p = self.progress;
+    
+          if (p > 0.15 && !this.state) {
+            this.state = true;
+            this.applyState();
+          }
+    
+          if (p < 0.05 && this.state) {
+            this.state = false;
+            this.applyState();
+          }
+    
+          if (p > 0.9) {
+            if (!this.lockScroll && !this.holdDone) {
+              this.lockScroll = true;
+    
+              clearTimeout(this.holdTimer);
+              this.holdTimer = setTimeout(() => {
+                this.lockScroll = false;
+                this.holdDone = true;
+              }, 0); 
+            }
+          } else {
+            this.holdDone = false;
+            this.lockScroll = false;
+            clearTimeout(this.holdTimer);
+          }
+        },
+      });
+    }
+    
 };
 
 
