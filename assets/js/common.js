@@ -107,12 +107,12 @@ const hero = {
     if (this.locked) return;
     this.locked = true;
   
+    this.unfreezeScroll(); 
     if (this.observer) this.observer.disable();
   
     const review = document.querySelector('.review');
     if (!review) {
       this.locked = false;
-      this.unfreezeScroll();
       return;
     }
   
@@ -126,9 +126,7 @@ const hero = {
       },
       duration: 0.8,
       ease: 'power2.out',
-      overwrite: true,
       onComplete: () => {
-        this.unfreezeScroll();
         this.locked = false;
       }
     });
