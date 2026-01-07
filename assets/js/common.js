@@ -107,7 +107,7 @@ const hero = {
     if (this.locked) return;
     this.locked = true;
   
-    this.unfreezeScroll(); 
+    window.removeEventListener('scroll', this._restore);
     if (this.observer) this.observer.disable();
   
     const review = document.querySelector('.review');
@@ -117,6 +117,7 @@ const hero = {
     }
   
     const headerH = document.querySelector('#header')?.offsetHeight || 0;
+    document.body.style.pointerEvents = 'none';
   
     gsap.to(window, {
       scrollTo: {
@@ -126,7 +127,9 @@ const hero = {
       },
       duration: 0.8,
       ease: 'power2.out',
+      overwrite: true,
       onComplete: () => {
+        document.body.style.pointerEvents = '';
         this.locked = false;
       }
     });
