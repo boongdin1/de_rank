@@ -12,157 +12,230 @@ const header = {
       }
   },
 }
-
-
 const hero = {
   section: document.querySelector('.hero'),
   switchBtn: document.querySelector('.hero .switch .switch-input'),
 
-  step: 0,
-  maxStep: 1,
+  state: false,
   animating: false,
+
+  step: 0,      
+  maxStep: 2,
+
+  back: false,
   observer: null,
+  reviewScrollTrigger: null,
 
   init() {
     if (!this.section) return;
 
     this.createIntroTimeline();
     this.playIntro();
-    this.createObserver();
-    this.observeReset();
-  },
-
-  createObserver() {
+  
+    this.switchBtn.addEventListener('change', () => {
+      this.state = this.switchBtn.checked;
+      this.applyState();
+    });
+  
     this.observer = Observer.create({
-      type: 'wheel,touch,pointer',
+      type: "wheel,touch,pointer",
+      wheelSpeed: -1,
       tolerance: 10,
       preventDefault: true,
-
-      onUp: () => {
-        if (this.animating || !this.isHeroActive()) return;
-        this.nextStep();
-      },
-
-      onDown: () => {
-        if (this.animating || !this.isHeroActive()) return;
-        this.prevStep();
-      },
+      onDown: () => this.prevStep(),
+      onUp: () => this.nextStep(),
     });
-  },
-
-  isHeroActive() {
-    const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    const r = this.section.getBoundingClientRect();
-    return r.top <= headerH && r.bottom > headerH;
-  },
-
-  nextStep() {
-    if (this.step < this.maxStep) {
-      this.gotoStep(this.step + 1);
-    } else {
-      this.leaveHero();
-    }
-  },
-
-  prevStep() {
-    if (this.step > 0) {
-      this.gotoStep(this.step - 1);
-    }
-  },
-
-  gotoStep(target) {
-    this.animating = true;
-    this.step = target;
-
-    this.applyStep();
-
-    this.snapToHero(() => {
-      this.animating = false;
-    });
-  },
-
-  leaveHero() {
-    const next = document.querySelector('.review');
-    if (!next) return;
-
-    this.animating = true;
-
-    const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    const top =
-      next.getBoundingClientRect().top +
-      window.scrollY -
-      headerH;
-
-    gsap.to(window, {
-      scrollTo: { y: top },
-      duration: 0.6,
-      ease: 'power2.out',
-      onComplete: () => {
-        this.animating = false;
-      },
-    });
-  },
-
-  applyStep() {
-    const on = this.step === 1;
-    this.section.classList.toggle('on', on);
-    this.switchBtn.checked = on;
-  },
-
-  snapToHero(cb) {
-    const headerH = document.querySelector('#header')?.offsetHeight || 0;
-    const top =
-      this.section.getBoundingClientRect().top +
-      window.scrollY -
-      headerH;
-
-    gsap.to(window, {
-      scrollTo: { y: top },
-      duration: 0.35,
-      ease: 'power2.out',
-      onComplete: cb,
-    });
-  },
-
-  observeReset() {
-    const headerH = document.querySelector('#header')?.offsetHeight || 0;
-
-    ScrollTrigger.create({
-      trigger: this.section,
-      start: `top-=${headerH} top`,
-      end: 'bottom top',
-      onLeaveBack: () => this.reset(),
-    });
-  },
-
-  reset() {
-    this.step = 0;
-    this.applyStep();
-  },
-
-  createIntroTimeline() {
-    const els = [
-      this.section.querySelector('.text h2'),
-      this.section.querySelector('.text p'),
-      this.section.querySelector('.text .switch'),
-      this.section.querySelector('.img'),
-    ];
-
-    gsap.set(els, { autoAlpha: 0, y: 100 });
-
-    this.introTl = gsap.timeline({ paused: true });
-    this.introTl.to(els, {
-      autoAlpha: 1,
-      y: 0,
-      duration: 0.6,
-      stagger: 0.15,
-      ease: 'power3.out',
-    });
+  
+    this.bindReviewReturn();
+    this.bindReviewScroll();
   },
 
   playIntro() {
     this.introTl?.play();
   },
+
+  applyState() {
+    this.section.classList.toggle('on', this.state);
+    this.switchBtn.checked = this.state;
+  },
+
+
+  nextStep() {
+    if (this.animating) return;
+    if (this.step === 0) {
+      this.animating = true;
+      this.step = 1;
+      this.state = true;
+      this.applyState();
+      
+      gsap.delayedCall(0.6, () => {
+        this.animating = false;
+      });
+    } else if (this.step === 1) {
+      this.goReview();
+    }
+  },
+
+  prevStep() {
+    if (this.animating) return;
+    console.log('prevStep');
+    
+    if (this.step === 1) {
+      this.animating = true;
+      this.step = 0;
+      this.state = false;
+      this.applyState();
+      
+      gsap.delayedCall(0.6, () => {
+        this.animating = false;
+      });
+    }
+  },
+
+  goStep(target) {
+    this.animating = true;
+    this.step = target;
+
+    this.state = target === 1;
+    if(target === 1){
+      this.observer.enable();
+    } else {
+      this.observer.disable();
+    }
+    this.applyState();
+
+    gsap.delayedCall(0.6, () => {
+      this.animating = false;
+    });
+  },
+
+  goReview() {
+    this.animating = true;
+    this.step = 2;
+
+    const review = document.querySelector('.review');
+    if (!review) return;
+
+    const top =
+      review.getBoundingClientRect().top +
+      window.scrollY;
+
+    this.observer.disable();
+
+    gsap.to(window, {
+      scrollTo: { y: top },
+      duration: 0.8,
+      ease: 'power2.out',
+      onComplete: () => {
+        this.animating = false;
+      }
+    });
+  },
+  createIntroTimeline() {
+    const h2 = this.section.querySelector('.text h2');
+    const p = this.section.querySelector('.text p');
+    const sw = this.section.querySelector('.text .switch');
+    const img = this.section.querySelector('.img');
+
+    gsap.set([h2, p, sw, img], { autoAlpha: 0, y: 100 });
+
+    this.introTl = gsap.timeline({
+      paused: true,
+      defaults: { ease: 'power3.out', duration: 0.8 },
+    });
+
+    this.introTl.to([h2, p, sw, img], {
+      autoAlpha: 1,
+      y: 0,
+      stagger: 0.2
+    });
+  },
+  bindReviewReturn() {
+    const wrap = document.querySelector('.hero-wrap');
+    if (!wrap) return;
+  
+    const checkScrollTop = () => {
+      if (window.scrollY === 0) {
+        console.log('scrollTop');
+        this.step = 0;
+        this.state = false;
+        this.applyState();
+        this.observer.enable();
+      }
+    };
+
+    let scrollTimeout;
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        checkScrollTop();
+      }, 10);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  
+    ScrollTrigger.create({
+      trigger: wrap,
+      start: 'top top',
+      end: 'bottom top',
+  
+      onEnterBack: () => {
+        console.log('enterBack');
+        hero.animating = true;
+        hero.step = 1;
+        hero.state = true;
+        hero.applyState();
+        
+        gsap.delayedCall(0.6, () => {
+          hero.animating = false;
+        });
+        checkScrollTop();
+      },
+      onLeave: () => {
+        console.log('leave');
+        this.observer.disable();
+      },
+      onEnter: () => {
+        console.log('enter');
+        checkScrollTop();
+      }
+    });
+  },
+  bindReviewScroll() {
+    const reviewSection = document.querySelector('.review');
+    if (!reviewSection) return;
+
+    let lastScrollY = window.scrollY;
+    let isScrollingUp = false;
+
+    const getReviewTop = () => {
+      const headerH = document.querySelector('#header')?.offsetHeight || 0;
+      return reviewSection.getBoundingClientRect().top + window.scrollY - headerH;
+    };
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const reviewTop = getReviewTop();
+      
+      if (currentScrollY >= reviewTop) {
+        isScrollingUp = currentScrollY < lastScrollY;
+        
+        if (isScrollingUp && this.step === 2 && !this.animating) {
+          this.animating = true;
+          this.step = 1;
+          this.state = false;
+          this.applyState();
+          
+          gsap.delayedCall(0.6, () => {
+            this.animating = false;
+          });
+        }
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
 };
 
 
@@ -606,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
   AOS.init({
       duration: 800,
   });
-  gsap.registerPlugin(Observer, ScrollToPlugin);
+  gsap.registerPlugin(ScrollTrigger,Observer, ScrollToPlugin);
 
   hero.init();
 
