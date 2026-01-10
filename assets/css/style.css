@@ -1,7 +1,13 @@
 @import url("./reset.css");
 @import url("./font.css");
 @import url("./common.css");
-
+html.hero-lock,
+body.hero-lock {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 main section{
     padding:60px 0;
     box-sizing: border-box;
@@ -14,7 +20,7 @@ main .sec-title{
 .hero-wrap{
     position: relative;
     width: 100%;
-    height: 200vh;
+    /* height: 200vh; */
 }
 .hero{
     padding:0;
@@ -23,10 +29,12 @@ main .sec-title{
     left: 0;
     width: 100%;
     min-height: calc(var(--vh) - 61px);
-    touch-action: none;
+    touch-action: pan-y;
 
     /* height: calc(100vh - 61px); */
 }
+
+body.hero-lock .hero { touch-action: none; }
 
 .hero .bg-wrap{
     position: absolute;
@@ -47,17 +55,22 @@ main .sec-title{
     overflow: hidden;
 }
 .hero .bg-wrap::after{
-    content:'';
-    position: absolute;
-    left: 0;
-    bottom:0;
+    content:"";
+    position:absolute;
+    left:0;
     right:0;
-    height: 160px;
-    background-color: rgba(0,0,0,0.2);
-    filter: blur(80px);
-    z-index: 2;
-    pointer-events: none;
-    transform: translate(0,83.125%);
+    bottom:0;
+    height:160px;
+    pointer-events:none;
+    z-index:5;
+    background: linear-gradient(
+      to top,
+      rgba(0,0,0,0.22) 0%,
+      rgba(0,0,0,0.14) 35%,
+      rgba(0,0,0,0.06) 60%,
+      rgba(0,0,0,0) 100%
+    );
+    transform: translate3d(0, 44px, 0);
 }
 .hero.on .bg{
     background: transparent url(../images/m_hero_bg_on.png) no-repeat center center / cover;
@@ -177,7 +190,7 @@ main .sec-title{
     width: 90vw;
     overflow: hidden;
     box-shadow: 0 40px 60px 0 rgba(0, 0, 0, 0.25);
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 8px 0 0;
 }
 .hero .img picture{
     position: absolute;
@@ -209,6 +222,7 @@ main .sec-title{
 .review{
     position: relative;
     z-index: 2;
+    overflow: hidden;
 }
 .review .review-list{
     display: flex;
@@ -217,16 +231,16 @@ main .sec-title{
 }
 .review .review-item{
     display: none;
-    box-sizing: border-box;
-    border:1px solid var(--grey-3);
-    border-radius: 20px;
-    padding:20px 13.5px;
 }
 .review .review-item.visible{
     display: block;
 }
 .review .review-item .item-inner{
     opacity: 0;
+    border:1px solid var(--grey-3);
+    border-radius: 20px;
+    padding:20px 13.5px;
+    box-sizing: border-box;
 }
 .review .review-item .review-title{
     display: flex;
@@ -341,6 +355,7 @@ main .sec-title{
     position: absolute;
     z-index: 1;
     left: 50%;
+    top: 252px;
     bottom:52px;
     transform: translate(-50%, 0);
     width: 75vw;
@@ -419,10 +434,10 @@ main .sec-title{
     border-radius: 20px;
     height: 40px;
 }
-.main-btm{
+/* .main-btm{
     display: flex;
     flex-direction: column-reverse;
-}
+} */
 .main-btm-banner{
     background: transparent url(../images/m_btm_banner.png) no-repeat center center;
     background-size: cover;
@@ -451,6 +466,9 @@ main .sec-title{
     color:var(--accent-1);
     padding:8px 24px;
     border-radius: 37px;   
+}
+.faq{
+    background: var(--grey-1);
 }
 .faq .sec-title{
     margin-bottom: 60px;
@@ -562,6 +580,10 @@ main .sec-title{
         height: calc(100vh - 81px);
         top: 81px;
     }
+    .hero .bg-wrap::after{
+        height: 222px;
+        transform: translate(0,60px);
+    }
     .hero .img{
         max-width: 1315px;
         margin:0 auto;
@@ -600,8 +622,9 @@ main .sec-title{
         left:50%;
         transform: translate(-50%, 0);
         max-width: unset;
-        padding:334px 0 88px;
+        padding: 284px 0 88px;
         box-sizing: border-box;
+        top: 0 !important;
     }
     .intro .card-list .card-item{
         width: 400px;
@@ -619,26 +642,14 @@ main .sec-title{
         margin:0;
         width: 734px;
         box-sizing: border-box;
-        top:334px;
+        top: 284px;
         height: calc(10% - 422px);
         right:50%;
         transform: translate(calc(50% + 440px), 0);
     }
     .intro .text-list li{
         text-align: left;
-        transform: translate(0,-50%);
-    }
-    .intro .text-list li:nth-child(1){
-        top: 183px;
-    }
-    .intro .text-list li:nth-child(2){
-        top: 277.5px;
-    }
-    .intro .text-list li:nth-child(3){
-        top: 292px;
-    }
-    .intro .text-list li:nth-child(4){
-        top: 291px;
+
     }
     .feature .sec-content{
         display: flex;
@@ -729,5 +740,17 @@ main .sec-title{
     }
     .main-btm-banner .inner{
         padding:80px 0;
+    }
+}
+
+@media (min-width: 1921px){ 
+    .intro .card-list{
+        width: 1000px;
+    }
+    .intro .card-list .card-item{
+        width: 566px;
+    }
+    .intro .text-list{
+        transform: translate(calc(50% + 540px), 0);
     }
 }
