@@ -5,7 +5,7 @@ html.hero-lock,
 body.hero-lock {
   position: fixed;
   width: 100%;
-  overflow: hidden;
+  /* overflow: hidden; */
   overscroll-behavior: none;
 }
 main section{
@@ -642,7 +642,7 @@ body.hero-lock .hero { touch-action: none; }
         margin:0;
         width: 734px;
         box-sizing: border-box;
-        top: 284px;
+        top: 53px;
         height: calc(10% - 422px);
         right:50%;
         transform: translate(calc(50% + 440px), 0);
