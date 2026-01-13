@@ -46,6 +46,9 @@ const hero = {
     if (window.scrollY <= 0) {
       this.state = false;
       this.applyState();
+      this.done = false;
+      this.locked = false;
+      this.wheelSum = 0;
       this.lockPage();
       this.bindInputOnce();
     } else {
@@ -56,6 +59,10 @@ const hero = {
       if (window.scrollY <= 0) {
         this.state = false;
         this.applyState();
+        this.done = false;
+        this.locked = false;
+        this.wheelSum = 0;
+        this.unbindInput();
         this.lockPage();
         this.bindInputOnce();
       } 
@@ -65,12 +72,16 @@ const hero = {
   scrollToTopAndInit() {
     this.state = false;
     this.applyState();
+    this.done = false;
+    this.locked = false;
+    this.wheelSum = 0;
     
     gsap.to(window, {
       scrollTo: { y: 0 },
       duration:0,
       ease: 'power2.out',
       onComplete: () => {
+        this.unbindInput();
         this.lockPage();
         this.bindInputOnce();
       }
@@ -107,6 +118,7 @@ const hero = {
   },
   
   bindInputOnce() {
+    console.log('bindInputOnce');
     this._onWheel = (e) => {
       const now = performance.now();
       
@@ -116,7 +128,7 @@ const hero = {
       }
       
       if (this.done || this.locked) return;
-      if (!this.isInHeroStage()) return;
+      // if (!this.isInHeroStage()) return;
       
       e.preventDefault();
       
