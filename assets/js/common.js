@@ -51,6 +51,15 @@ const hero = {
     } else {
       this.scrollToTopAndInit();
     }
+
+    window.addEventListener('scroll', ()=>{
+      if (window.scrollY <= 0) {
+        this.state = false;
+        this.applyState();
+        this.lockPage();
+        this.bindInputOnce();
+      } 
+    });
   },
   
   scrollToTopAndInit() {
