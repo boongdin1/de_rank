@@ -1,9 +1,6 @@
 @import url("./reset.css");
 @import url("./font.css");
 @import url("./common.css");
-html{
-    overflow: scroll;
-}
 html.hero-lock,
 body.hero-lock {
   position: fixed;
